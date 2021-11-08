@@ -53,12 +53,12 @@ namespace DynamicWorkspaceManager
         private static readonly object _SelfLock = new object();
         private static WorkspacePromptWindow Self = null;
 
-        public static Task<string> GetUserInput()
+        public static Task<string> GetUserInput(bool forceOpen = false)
         {
             // If not opened, previous window still exists. The user input
             // should be handled by the previous call of GetUserInput(), so for
             // this call we simply throws OperationCanceledException.
-            if (!Open())
+            if (!Open(forceOpen))
             {
                 return Task.FromException<string>(
                     new OperationCanceledException());
@@ -68,12 +68,15 @@ namespace DynamicWorkspaceManager
             return Self.futureResult.Task;
         }
 
-        public static bool Open()
+        private static bool Open(bool forceOpen)
         {
             lock (_SelfLock)
             {
-                if (Self == null)
+                if (forceOpen || Self == null)
                 {
+                    // Close current if exists
+                    Self?.Close();
+
                     Self = new WorkspacePromptWindow();
                     Self.Show();
                     Self.Activate();
@@ -90,7 +93,8 @@ namespace DynamicWorkspaceManager
 
         public WorkspacePromptViewModel Vm { get; }
 
-        // FIXME: Little hacky.
+        // FIXME: Little hacky. We need to do with PreviewKeyDown, because
+        // AutoCompleteBox consumes KeyDown events.
         private void TextBoxPreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)

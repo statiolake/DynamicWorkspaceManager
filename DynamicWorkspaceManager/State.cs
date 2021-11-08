@@ -21,29 +21,75 @@ namespace DynamicWorkspaceManager
         {
             InitializeWorkspaces();
 
-            VirtualDesktop.CurrentChanged += (sender, args) =>
+            VirtualDesktop.CurrentChanged += async (sender, args) =>
             {
                 // Remove old workspace if it is empty.
                 var old = args.OldDesktop;
                 if (old.IsEmpty())
                 {
-                    old.Remove();
-                    this.lastWorkspace = null;
+                    try
+                    {
+                        old.Remove();
+                        this.lastWorkspace = null;
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Sometimes fails; ignore it
+                    }
                 }
                 else
                 {
                     this.lastWorkspace = old;
                 }
 
-                // Notify current desktop
-                dispatcher.Invoke(async () =>
+                // Ask users to new name if current desktop is unnamed
+                var taskNaming = dispatcher.Invoke(async () =>
                 {
-                    using (CurrentDesktopNotifierPopup.Open(
-                        VirtualDesktop.Current.Name))
+                    var curr = args.NewDesktop;
+                    if (string.IsNullOrEmpty(curr.Name))
+                    {
+                        try
+                        {
+                            var name = await WorkspacePromptWindow.GetUserInput(true);
+
+                            var existingNames = new HashSet<string>(
+                                VirtualDesktop
+                                    .GetDesktops()
+                                    .Select(desktop => desktop.Name));
+
+                            string cand = name;
+                            int index = 0;
+                            while (existingNames.Contains(cand))
+                            {
+                                index++;
+                                cand = string.Format("{0}{1}", name, index);
+                            }
+
+                            curr.Name = cand;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Cancelled; ignore.
+                        }
+                    }
+                });
+
+                // Notify current desktop
+                var taskNotifying = dispatcher.Invoke(async () =>
+                {
+                    var name = VirtualDesktop.Current.Name;
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        name = "(Unnamed)";
+                    }
+
+                    using (CurrentDesktopNotifierPopup.Open(name))
                     {
                         await Task.Delay(TimeSpan.FromSeconds(1));
                     }
                 });
+
+                await Task.WhenAll(taskNaming, taskNotifying);
             };
 
             VirtualDesktop.Destroyed += (sender, args) =>
