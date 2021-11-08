@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using WindowsDesktop;
 
@@ -21,7 +22,17 @@ namespace DynamicWorkspaceManager
 
             VirtualDesktop.CurrentChanged += (sender, args) =>
             {
-                this.lastWorkspace = args.OldDesktop;
+                // Remove old workspace if it is empty.
+                var old = args.OldDesktop;
+                if (old.IsEmpty())
+                {
+                    old.Remove();
+                    this.lastWorkspace = null;
+                }
+                else
+                {
+                    this.lastWorkspace = old;
+                }
             };
 
             VirtualDesktop.Destroyed += (sender, args) =>
@@ -47,34 +58,52 @@ namespace DynamicWorkspaceManager
         }
 
         public void Switch(string name)
-            => GetOrCreate(name).RemoveSwitch();
+            => GetOrCreate(name).Switch();
 
         public void ShiftSwitch(string name)
             => GetOrCreate(name).ShiftSwitch(GetForegroundWindow());
 
         public async void SwitchToWorkspacePrompt()
         {
-            var name = await WorkspacePromptWindow.GetUserInput();
-            var desktop = GetOrCreate(name);
-            desktop.Switch();
+            try
+            {
+                var name = await WorkspacePromptWindow.GetUserInput();
+                // Wait for window close
+                await Task.Delay(TimeSpan.FromMilliseconds(200));
+                var desktop = GetOrCreate(name);
+                desktop.Switch();
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore cancellation.
+            }
         }
 
         public async void ShiftSwitchToWorkspacePrompt()
         {
-            var name = await WorkspacePromptWindow.GetUserInput();
-            var desktop = GetOrCreate(name);
-            desktop.ShiftSwitch(GetForegroundWindow());
+            try
+            {
+                var name = await WorkspacePromptWindow.GetUserInput();
+                // Wait for window close
+                await Task.Delay(TimeSpan.FromMilliseconds(200));
+                var desktop = GetOrCreate(name);
+                desktop.ShiftSwitch(GetForegroundWindow());
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore cancellation.
+            }
         }
 
         public void SwitchToLastWorkspace()
-            => this.lastWorkspace?.RemoveSwitch();
+            => this.lastWorkspace?.Switch();
 
         public void ShiftSwitchToLastWorkspace()
             => this.lastWorkspace?.ShiftSwitch(GetForegroundWindow());
 
         public void SwitchToLeftWorkspace()
             => VirtualDesktop.Current.GetLeft()?
-                .RemoveSwitch();
+                .Switch();
 
         public void ShiftSwitchToLeftWorkspace()
             => VirtualDesktop.Current.GetLeft()?
@@ -82,7 +111,7 @@ namespace DynamicWorkspaceManager
 
         public void SwitchToRightWorkspace()
             => VirtualDesktop.Current.GetRight()?
-                .RemoveSwitch();
+                .Switch();
 
         public void ShiftSwitchToRightWorkspace()
             => VirtualDesktop.Current.GetRight()?

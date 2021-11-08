@@ -14,12 +14,6 @@ namespace DynamicWorkspaceManager
 {
     public class WorkspacePromptViewModel : INotifyPropertyChanged
     {
-        public WorkspacePromptViewModel(bool shift, IntPtr foregroundWindow)
-        {
-            Shift = shift;
-            ForegroundWindow = foregroundWindow;
-        }
-
         public List<string> Desktops
         {
             get => VirtualDesktop.GetDesktops().Select(d => d.Name).ToList();
@@ -31,8 +25,6 @@ namespace DynamicWorkspaceManager
             {
                 if (!(obj is string name)) return false;
                 if (name == null) return false;
-
-                // TODO: fuzzy match
                 return name.Contains(query);
             };
         }
@@ -72,33 +64,23 @@ namespace DynamicWorkspaceManager
 
         public void EnterPressed()
         {
-            RequestClose?.Invoke();
-
-            // Wait until window close complete.
-            Thread.Sleep(200);
-            
-            if (this.BoxText != null)
+            if (string.IsNullOrEmpty(this.BoxText))
             {
-                var desktop = State.GetOrCreate(this.BoxText);
-                if (this.Shift)
-                {
-                    desktop.ShiftSwitch(ForegroundWindow);
-                }
-                else
-                {
-                    desktop.RemoveSwitch();
-                }
+                Rejected?.Invoke();
+                return;
             }
+
+            Accepted?.Invoke(this.BoxText);
         }
 
         public void TabPressed()
         {
-            // TODO: Get completion
+            // TODO: Get completion?
         }
 
         public void EscapePressed()
         {
-            RequestClose?.Invoke();
+            Rejected?.Invoke();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -107,6 +89,7 @@ namespace DynamicWorkspaceManager
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(caller));
         }
 
-        public event Action RequestClose;
+        public event Action<string> Accepted;
+        public event Action Rejected;
     }
 }
