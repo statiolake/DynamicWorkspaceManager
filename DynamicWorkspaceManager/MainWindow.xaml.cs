@@ -27,7 +27,7 @@ namespace DynamicWorkspaceManager
         public MainWindow()
         {
             this.hotkey = new HotKeyManager(this);
-            this.state = new State();
+            this.state = new State(Dispatcher);
 
             InitializeComponent();
             InitializeHotKeys();

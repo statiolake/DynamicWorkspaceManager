@@ -11,16 +11,21 @@
         WindowStyle="None"
         Topmost="True"
         WindowStartupLocation="CenterScreen"
+        Background="#1e1e1e"
         FocusManager.FocusedElement="{Binding ElementName=textbox}">
     <Window.Resources>
         <DataTemplate x:Key="AutoCompleteBoxItemTemplate">
-            <Label Content="{Binding}" />
+            <Label Foreground="White" Content="{Binding}" />
         </DataTemplate>
     </Window.Resources>
-    <Grid>
+    <Border
+        BorderBrush="White"
+        BorderThickness="2">
         <input:AutoCompleteBox
             x:Name="textbox"
             Margin="8" VerticalContentAlignment="Center"
+            Background="#1e1e1e"
+            Foreground="White"
             PreviewKeyDown="TextBoxPreviewKeyDown"
             Text="{Binding BoxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             SelectedItem="{Binding SelectedDesktop}"
@@ -28,5 +33,5 @@
             ItemFilter="{Binding DesktopFilter}"
             ItemTemplate="{StaticResource ResourceKey=AutoCompleteBoxItemTemplate}"
             IsTextCompletionEnabled="True" />
-    </Grid>
+    </Border>
 </Window>

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using WindowsDesktop;
 
 namespace DynamicWorkspaceManager
@@ -16,7 +17,7 @@ namespace DynamicWorkspaceManager
 
         private VirtualDesktop lastWorkspace = null;
 
-        public State()
+        public State(Dispatcher dispatcher)
         {
             InitializeWorkspaces();
 
@@ -33,6 +34,16 @@ namespace DynamicWorkspaceManager
                 {
                     this.lastWorkspace = old;
                 }
+
+                // Notify current desktop
+                dispatcher.Invoke(async () =>
+                {
+                    using (CurrentDesktopNotifierPopup.Open(
+                        VirtualDesktop.Current.Name))
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                    }
+                });
             };
 
             VirtualDesktop.Destroyed += (sender, args) =>

@@ -63,11 +63,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CurrentDesktopNotifierViewModel.cs" />
+    <Compile Include="CurrentDesktopNotifierPopup.xaml.cs">
+      <DependentUpon>CurrentDesktopNotifierPopup.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TrayIcon.cs" />
     <Compile Include="WorkspacePromptWindow.xaml.cs">
       <DependentUpon>WorkspacePromptWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkspacePromptViewModel.cs" />
+    <Page Include="CurrentDesktopNotifierPopup.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

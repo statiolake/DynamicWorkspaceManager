@@ -1,0 +1,22 @@
+﻿<Popup x:Class="DynamicWorkspaceManager.CurrentDesktopNotifierPopup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DynamicWorkspaceManager"
+       Width="200"
+       Height="50"
+       mc:Ignorable="d"
+       AllowsTransparency="True">
+    <Border
+        BorderBrush="White"
+        BorderThickness="2"
+        Background="#dd1e1e1e"
+        Margin="0"
+        MaxHeight="500">
+        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center"
+            Foreground="White"
+            FontSize="20"
+            Text="{Binding CurrentDesktopName}" />
+    </Border>
+</Popup>
