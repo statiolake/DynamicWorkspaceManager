@@ -32,6 +32,8 @@
             ItemsSource="{Binding Desktops}"
             ItemFilter="{Binding DesktopFilter}"
             ItemTemplate="{StaticResource ResourceKey=AutoCompleteBoxItemTemplate}"
-            IsTextCompletionEnabled="True" />
+            IsTextCompletionEnabled="True"
+            MinimumPrefixLength="0"
+            GotFocus="TextBoxGotFocus" />
     </Border>
 </Window>

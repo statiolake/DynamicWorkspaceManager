@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace DynamicWorkspaceManager
@@ -109,6 +110,12 @@ namespace DynamicWorkspaceManager
             {
                 Vm.EscapePressed();
             }
+        }
+
+        private void TextBoxGotFocus(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is AutoCompleteBox box)) return;
+            box.IsDropDownOpen = true;
         }
     }
 }
