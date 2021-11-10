@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -21,7 +22,15 @@ namespace DynamicWorkspaceManager
         {
             if (msg.message != WM_HOTKEY) return;
             var id = msg.wParam.ToInt32();
-            this.actions[id]();
+            var action = this.actions[id];
+            if (action is null)
+            {
+                Debug.WriteLine("Warning: hotkey {0} is unknown", id);
+            }
+            else
+            {
+                action();
+            }
         }
 
         public HotKeyDisposable Register(

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -115,7 +116,7 @@ namespace DynamicWorkspaceManager
         }
 
         public void Switch(string name)
-            => GetOrCreate(name).Switch();
+            => GetOrCreate(name).SwitchFocus();
 
         public void ShiftSwitch(string name)
             => GetOrCreate(name).ShiftSwitch(GetForegroundWindow());
@@ -128,7 +129,7 @@ namespace DynamicWorkspaceManager
                 // Wait for window close
                 await Task.Delay(TimeSpan.FromMilliseconds(200));
                 var desktop = GetOrCreate(name);
-                desktop.Switch();
+                desktop.SwitchFocus();
             }
             catch (OperationCanceledException)
             {
@@ -153,22 +154,20 @@ namespace DynamicWorkspaceManager
         }
 
         public void SwitchToLastWorkspace()
-            => this.lastWorkspace?.Switch();
+            => this.lastWorkspace?.SwitchFocus();
 
         public void ShiftSwitchToLastWorkspace()
             => this.lastWorkspace?.ShiftSwitch(GetForegroundWindow());
 
         public void SwitchToLeftWorkspace()
-            => VirtualDesktop.Current.GetLeft()?
-                .Switch();
+            => VirtualDesktop.Current.GetLeft()?.SwitchFocus();
 
         public void ShiftSwitchToLeftWorkspace()
             => VirtualDesktop.Current.GetLeft()?
                 .ShiftSwitch(GetForegroundWindow());
 
         public void SwitchToRightWorkspace()
-            => VirtualDesktop.Current.GetRight()?
-                .Switch();
+            => VirtualDesktop.Current.GetRight()?.SwitchFocus();
 
         public void ShiftSwitchToRightWorkspace()
             => VirtualDesktop.Current.GetRight()?
@@ -266,23 +265,15 @@ namespace DynamicWorkspaceManager
 
     public static class ShiftSwitchExtension
     {
-        public static void RemoveSwitch(this VirtualDesktop desktop)
+        public static void SwitchFocus(this VirtualDesktop desktop)
         {
-            // Remove current if empty
-            if (VirtualDesktop.Current.IsEmpty())
+            desktop.Switch();
+
+            // Focus some window in the new desktop to avoid keyboard inputs
+            // still captured by the previous application.
+            foreach (var hwnd in desktop.AllWindows(firstOnly: true))
             {
-                try
-                {
-                    VirtualDesktop.Current.Remove(desktop);
-                }
-                catch (ArgumentException)
-                {
-                    // sometimes already removed; ignore it
-                }
-            }
-            else
-            {
-                desktop.Switch();
+                SetForegroundWindow(hwnd);
             }
         }
 
@@ -292,7 +283,7 @@ namespace DynamicWorkspaceManager
             try
             {
                 VirtualDesktopHelper.MoveToDesktop(hWnd, desktop);
-                desktop.RemoveSwitch();
+                desktop.SwitchFocus();
             }
             catch (COMException)
             {
@@ -301,15 +292,20 @@ namespace DynamicWorkspaceManager
         }
 
         public static bool IsEmpty(this VirtualDesktop desktop)
+            => desktop.AllWindows(firstOnly: true).Count == 0;
+
+        public static List<IntPtr> AllWindows(
+            this VirtualDesktop desktop, bool firstOnly = false)
         {
-            bool found = false;
+            var hwnds = new List<IntPtr>();
             bool callback(IntPtr hwnd, IntPtr _lparam)
             {
                 if (VirtualDesktop.FromHwnd(hwnd) == desktop)
                 {
-                    found = true;
-                    // We don't have to continue enumeration, hence return false.
-                    return false;
+                    hwnds.Add(hwnd);
+                    // if firstOnly is true, We don't have to continue
+                    // enumeration, hence return false.
+                    return !firstOnly;
                 }
 
                 // Continue enumeration, as this window does not belongs not
@@ -317,7 +313,7 @@ namespace DynamicWorkspaceManager
                 return true;
             }
             _ = EnumWindows(callback, IntPtr.Zero);
-            return !found;
+            return hwnds;
         }
 
         private delegate bool EnumWindowsDelegate(IntPtr hWnd, IntPtr lparam);
@@ -326,5 +322,16 @@ namespace DynamicWorkspaceManager
         private static extern bool EnumWindows(
             EnumWindowsDelegate lpEnumFunc,
             IntPtr lparam);
+
+        [DllImport("user32.dll")]
+        static extern bool SetForegroundWindow(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        private static extern int SendMessage(
+            IntPtr hWnd,
+            int Msg,
+            IntPtr wParam, IntPtr lParam);
+
+        private const int WM_KILLFOCUS = 0x0008;
     }
 }

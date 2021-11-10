@@ -38,28 +38,28 @@ namespace DynamicWorkspaceManager
 
         private void InitializeHotKeys()
         {
-            this.hotkey.Register(
+            _ = this.hotkey.Register(
                 ModifierKeys.Windows | ModifierKeys.Control, Key.X,
                 this.state.SwitchToLastWorkspace);
-            this.hotkey.Register(
+            _ = this.hotkey.Register(
                 ModifierKeys.Windows | ModifierKeys.Shift, Key.X,
                 this.state.ShiftSwitchToLastWorkspace);
-            this.hotkey.Register(
+            _ = this.hotkey.Register(
                 ModifierKeys.Windows | ModifierKeys.Control, Key.Oem3,
                 this.state.SwitchToWorkspacePrompt);
-            this.hotkey.Register(
+            _ = this.hotkey.Register(
                 ModifierKeys.Windows | ModifierKeys.Shift, Key.Oem3,
                 this.state.ShiftSwitchToWorkspacePrompt);
-            this.hotkey.Register(
+            _ = this.hotkey.Register(
                 ModifierKeys.Windows | ModifierKeys.Control, Key.H,
                 this.state.SwitchToLeftWorkspace);
-            this.hotkey.Register(
+            _ = this.hotkey.Register(
                 ModifierKeys.Windows | ModifierKeys.Shift, Key.H,
                 this.state.ShiftSwitchToLeftWorkspace);
-            this.hotkey.Register(
+            _ = this.hotkey.Register(
                 ModifierKeys.Windows | ModifierKeys.Control, Key.L,
                 this.state.SwitchToRightWorkspace);
-            this.hotkey.Register(
+            _ = this.hotkey.Register(
                 ModifierKeys.Windows | ModifierKeys.Shift, Key.L,
                 this.state.ShiftSwitchToRightWorkspace);
         }
